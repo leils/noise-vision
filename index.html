@@ -195,23 +195,28 @@
         drawCurrentFrame();
         updateHUD();
 
-        if (pendingFrame !== null) {
+        // Only chase pendingFrame if it's actually a different position
+        if (pendingFrame !== null && pendingFrame !== f) {
           const next = pendingFrame;
           pendingFrame = null;
           doSeek(next);
         } else {
+          pendingFrame = null;
           isSeeking = false;
         }
       });
-      // Land at the midpoint of the frame's time window
       video.currentTime = (f + 0.5) / FPS;
     }
 
     function seekToFrame(f) {
       if (!ready) return;
       f = Math.max(0, Math.min(totalFrames - 1, f));
-      currentFrame = f;
 
+      // Already at this frame and not mid-seek — nothing to do, don't trigger a seek
+      // that will never resolve because currentTime isn't changing
+      if (f === currentFrame && !isSeeking) return;
+
+      currentFrame = f;
       if (isSeeking) {
         pendingFrame = f;
         return;
